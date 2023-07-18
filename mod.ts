@@ -302,9 +302,12 @@ export function broker(
           break;
         case QUEUE:
           switch (frame.payload.methodId) {
-            case QUEUE_DECLARE:
-              if (queues[frame.payload.args.queue] == undefined) {
-                queues[frame.payload.args.queue] = {
+            case QUEUE_DECLARE: {
+              const queueName = frame.payload.args.queue ||
+                "amq.gen-" +
+                  base64urlencode(crypto.getRandomValues(new Uint8Array(16)));
+              if (queues[queueName] == undefined) {
+                queues[queueName] = {
                   messages: [],
                   consumers: [],
                   lastDelivered: 0,
@@ -317,15 +320,14 @@ export function broker(
                   classId: frame.payload.classId,
                   methodId: QUEUE_DECLARE_OK,
                   args: {
-                    queue: frame.payload.args.queue,
-                    messageCount:
-                      queues[frame.payload.args.queue].messages.length,
-                    consumerCount:
-                      queues[frame.payload.args.queue].consumers.length,
+                    queue: queueName,
+                    messageCount: queues[queueName].messages.length,
+                    consumerCount: queues[queueName].consumers.length,
                   },
                 },
               }]);
               return;
+            }
             case QUEUE_BIND: {
               if (exchanges[frame.payload.args.exchange] == undefined) {
                 await socket.write([{
