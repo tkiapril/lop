@@ -185,11 +185,11 @@ export function broker(
       } else if (
         exchanges[msg.exchange]?.type === "fanout" || !msg.routingKey
       ) {
-        Object.values(exchanges[msg.exchange]?.route).flat().forEach((
+        Object.values(exchanges[msg.exchange].route).flat().forEach((
           queueName,
         ) => queues[queueName].messages.push(msg));
       } else {
-        exchanges[msg.exchange].route[msg.routingKey].forEach((queueName) =>
+        exchanges[msg.exchange]?.route[msg.routingKey]?.forEach((queueName) =>
           queues[queueName].messages.push(msg)
         );
       }
@@ -380,14 +380,12 @@ export function broker(
               }
               if (
                 !exchanges[frame.payload.args.exchange]
-                  .route[frame.payload.args.routingKey].includes(
-                    frame.payload.args.queue,
-                  )
+                  .route[frame.payload.args.routingKey]
+                  .includes(frame.payload.args.queue)
               ) {
                 exchanges[frame.payload.args.exchange]
-                  .route[frame.payload.args.routingKey].push(
-                    frame.payload.args.queue,
-                  );
+                  .route[frame.payload.args.routingKey]
+                  .push(frame.payload.args.queue);
               }
               await socket.write([{
                 channel: frame.channel,
